@@ -49,4 +49,69 @@ cloud-id: **********************
 folder-id: *******************
 compute-default-zone: ru-central1-a
 ```
+4. Клонируем к себе репозиторий
+```ruby
+mikhail@mikhail-GL703VD:~/Desktop/otus/02-Packer$ git clone https://github.com/timurb/otus-packer 
+```
+в каталоге ```json``` создаем перменные ```YC_TOKEN``` и ```YC_FOLDER```
 
+5. Создаем сервисную учетную запись для packer
+
+```ruby
+
+mikhail@mikhail-GL703VD:~/Desktop/otus/02-Packer/otus-packer/json$ yc iam service-account create --name packer --folder-id b1gra********
+mikhail@mikhail-GL703VD:~/Desktop/otus/02-Packer/otus-packer/json$ yc iam service-account get ajeq8k7*********
+id: ajeq8k7****************
+folder_id: b1gra*********
+created_at: "2022-08-04T08:54:34Z"
+name: packer
+```
+```ruby
+mikhail@mikhail-GL703VD:~/Desktop/otus/02-Packer/otus-packer/json$ yc resource-manager folder add-access-binding --id b1gra********** --role editor --service-account-id ajeq8***********
+done (1s)
+```
+
+```ruby
+mikhail@mikhail-GL703VD:~/Desktop/otus/02-Packer/otus-packer/json$ yc iam key create --service-account-id ajeq8k7l8oo3nup5f84b --output key.json
+id: ajecm***********
+service_account_id: ajeq8*********
+created_at: "2022-08-04T09:00:52.275723258Z"
+key_algorithm: RSA_2048
+```
+6. Вставляем путь к нашему ключу в template.json в "service_account_key_file" в блок builders
+7. Запускаем сборку
+```ruby
+mikhail@mikhail-GL703VD:~/Desktop/otus/02-Packer/otus-packer/json$ packer build template.json
+
+..............
+
+Build 'yandex' finished after 2 minutes 48 seconds.
+
+==> Wait completed after 2 minutes 48 seconds
+
+==> Builds finished. The artifacts of successful builds are:
+--> yandex: A disk image was created: ubuntu-2004-lts-nginx-2022-08-04t09-49-00z (id: fd8afpoirk5pqaain9mr) with family name ubuntu-web-server
+```
+8. Проверим, что получилось командой ```yc compute image list```
+```ruby
+mikhail@mikhail-GL703VD:~/Desktop/otus/02-Packer/otus-packer/json$ yc compute image list
++----------------------+--------------------------------------------+-------------------+----------------------+--------+
+|          ID          |                    NAME                    |      FAMILY       |     PRODUCT IDS      | STATUS |
++----------------------+--------------------------------------------+-------------------+----------------------+--------+
+| fd8afpoirk5pqaain9mr | ubuntu-2004-lts-nginx-2022-08-04t09-49-00z | ubuntu-web-server | f2emflrscp4rd664n8o7 | READY  |
++----------------------+--------------------------------------------+-------------------+----------------------+--------+
+```
+9. Удалим собранный образ
+```ruby
+mikhail@mikhail-GL703VD:~/Desktop/otus/02-Packer/otus-packer/json$ yc compute image delete --id fd8afpoirk5pqaain9mr
+done (7s)
+```
+10. Проверим
+```ruby
+mikhail@mikhail-GL703VD:~/Desktop/otus/02-Packer/otus-packer/json$ yc compute image list
++----+------+--------+-------------+--------+
+| ID | NAME | FAMILY | PRODUCT IDS | STATUS |
++----+------+--------+-------------+--------+
++----+------+--------+-------------+--------+
+
+```
