@@ -1,7 +1,7 @@
 {
   "variables": {
     "token": "{{env `YC_TOKEN`}}",
-    "folder_id": "b1graaou3tkpvu2vmppo"
+    "folder_id": "b1graa********"
   },
 
   "builders": [
